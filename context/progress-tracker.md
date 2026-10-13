@@ -23,7 +23,7 @@ Update this file at the end of every ticket. Status values: `todo`, `in-progress
 | T01 | 0.1 | Workspace, CI, lint, benchmark skeleton | done | 2026-10-13 | 8 crates, downward deps check, CI, bench skeleton |
 | T02 | 0.1 | kiln-text: rope wrapper, graphemes, line endings, encoding | done | 2026-10-13 | Rope wrapper, conversions, graphemes, line endings, encodings, binary sniffing |
 | T03 | 0.1 | kiln-core: buffer, selection, transaction, undo tree | done | 2026-10-13 | Buffer, Selection, Selections, Transaction, ChangeSet, UndoTree, Marks, benchmarks |
-| T04 | 0.1 | kiln-core: command registry and basic edit commands | todo | | |
+| T04 | 0.1 | kiln-core: command registry and basic edit commands | done | 2026-10-13 | Command registry, EventBus, built-in edit & motion commands, fuzz tests |
 | T05 | 0.1 | kiln-input: key parsing, mode state machine, keymaps | todo | | |
 | T06 | 0.1 | Vim motions and operators, first batch | todo | | |
 | T07 | 0.1 | kiln-ui: buffer view, status line, cursor, dark theme | todo | | |

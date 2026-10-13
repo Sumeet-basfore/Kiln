@@ -8,14 +8,22 @@
 //! - Buffer model with versioning, dirty flag tracking derived from undo tree, and named marks.
 
 pub mod buffer;
+pub mod command;
+pub mod commands;
 pub mod error;
+pub mod event;
 pub mod history;
 pub mod marks;
 pub mod selection;
 pub mod transaction;
 
 pub use buffer::{ApplyResult, Buffer, BufferId, BufferIdAllocator};
+pub use command::{
+    CommandArg, CommandContext, CommandFn, CommandMeta, CommandRegistry, CommandResult,
+    MoveDirection,
+};
 pub use error::CoreError;
+pub use event::{EditorEvent, EventBus, EventHandler, SubscriptionId};
 pub use history::{HistoryNode, NodeId, UndoTree};
 pub use marks::Marks;
 pub use selection::{Range, Selections};

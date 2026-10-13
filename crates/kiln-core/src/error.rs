@@ -74,4 +74,18 @@ pub enum CoreError {
         /// Requested sequence number.
         seq: u64,
     },
+
+    /// The requested command was not found in the registry.
+    #[error("Command not found: {name}")]
+    CommandNotFound {
+        /// Name of the missing command.
+        name: String,
+    },
+
+    /// An invalid argument was passed to a command.
+    #[error("Invalid command argument: {message}")]
+    InvalidArgument {
+        /// Description of the argument issue.
+        message: &'static str,
+    },
 }
