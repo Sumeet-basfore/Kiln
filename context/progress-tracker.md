@@ -24,7 +24,7 @@ Update this file at the end of every ticket. Status values: `todo`, `in-progress
 | T02 | 0.1 | kiln-text: rope wrapper, graphemes, line endings, encoding | done | 2026-10-13 | Rope wrapper, conversions, graphemes, line endings, encodings, binary sniffing |
 | T03 | 0.1 | kiln-core: buffer, selection, transaction, undo tree | done | 2026-10-13 | Buffer, Selection, Selections, Transaction, ChangeSet, UndoTree, Marks, benchmarks |
 | T04 | 0.1 | kiln-core: command registry and basic edit commands | done | 2026-10-13 | Command registry, EventBus, built-in edit & motion commands, fuzz tests |
-| T05 | 0.1 | kiln-input: key parsing, mode state machine, keymaps | todo | | |
+| T05 | 0.1 | kiln-input: key parsing, mode state machine, keymaps | done | 2026-10-13 | Terminal-agnostic KeyEvent, Mode, KeymapTrie, VimStateMachine (3dw, \"ayy, d2j, ciw), InputEngine |
 | T06 | 0.1 | Vim motions and operators, first batch | todo | | |
 | T07 | 0.1 | kiln-ui: buffer view, status line, cursor, dark theme | todo | | |
 | T08 | 0.1 | File open, atomic save, headless test harness | todo | | |
