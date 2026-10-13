@@ -1,4 +1,25 @@
-//! `kiln-core` crate: buffers, selections, transactions, undo tree, registers, commands, and events.
+//! `kiln-core`: editing model, buffers, selections, transactions, and undo tree.
+//!
+//! Features:
+//! - Character-offset based range and selection lists with automatic normalization.
+//! - Invertible and composable change sets and transactions (`ChangeSet`, `Transaction`).
+//! - Branching undo tree with preferred redo navigation, common-ancestor jumps, and sequence numbers.
+//! - Undo grouping support (`begin_group` / `end_group`).
+//! - Buffer model with versioning, dirty flag tracking derived from undo tree, and named marks.
+
+pub mod buffer;
+pub mod error;
+pub mod history;
+pub mod marks;
+pub mod selection;
+pub mod transaction;
+
+pub use buffer::{ApplyResult, Buffer, BufferId, BufferIdAllocator};
+pub use error::CoreError;
+pub use history::{HistoryNode, NodeId, UndoTree};
+pub use marks::Marks;
+pub use selection::{Range, Selections};
+pub use transaction::{Assoc, ChangeSet, Operation, Transaction, TransactionOrigin};
 
 /// Returns the name of this crate.
 #[must_use]

@@ -5,6 +5,10 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 ## Decisions
 | Date | Decision | Why | Ticket |
 |---|---|---|---|
+| 2026-10-13 | ChangeSet normalized ops representation for transactions | Retain/Delete/Insert ops merged and non-zero; inverses calculated from start text; skipping history prohibited to protect inverse integrity | T03 |
+| 2026-10-13 | Undo group lifecycle: start snapshot at depth 0->1, compose at 0 | Nested groups supported cleanly; dirty state tracks saved undo node ID; jump/undo/save while group open strictly rejected | T03 |
+| 2026-10-13 | Range mapping rules: empty range assoc after; non-empty start after / end before | Preserves Vim point cursor invariants and keeps insertions outside selected ranges | T03 |
+| 2026-10-13 | Buffer explicitly excludes syntax tree | Preserves strict crate dependency hierarchy (kiln-syntax keys syntax trees by (BufferId, version)) | T03 |
 | 2026-10-13 | Normalized `\n` in Text rope; denormalize on save | Clean char offsets, column math, and tree-sitter sync without CRLF double-offset complications | T02 |
 | 2026-10-13 | External crates in kiln-text: ropey, unicode-segmentation, unicode-width, thiserror | Drop encoding_rs in favor of manual standards-compliant UTF-8/UTF-16/Latin-1 decoding | T02 |
 | 2026-10-13 | `kiln-benches` as tooling package | `benches/` is developer tooling, not a product crate; ignored by check-deps.sh | T01 |
@@ -24,6 +28,7 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 - Which agent protocol for v2 (ACP, MCP or both).
 
 ## Gotchas and lessons
+- 2026-10-13 · T03 · Criterion benchmark on 100 MB buffer (~104.8M chars): `apply_and_undo_transaction_100mb`: ~179 ms (well within 200 ms budget); `map_1000_marks` across transaction: ~1.04 µs.
 - 2026-10-13 · T02 · Criterion benchmark numbers on 100 MB rope (~104.8M chars, ~1.12M lines): `read_slice_middle` (1000 chars): ~311 ns; `char_to_line_col`: ~166 ns; `insert_remove_middle` (100 chars): ~451 ns.
 - 2026-10-13 · T02 · In deny.toml `[bans]`, `allow-workspace = true` and `wildcards = "allow"` are required when workspace crates reference path dependencies without version numbers.
 - 2026-10-13 · T01 · In Cargo virtual workspaces, `benches/` needs its own package manifest or membership in `[workspace.members]` to run `cargo bench`.
@@ -37,8 +42,10 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 
 ## Follow-ups
 (Things deliberately postponed, each with the ticket that should pick them up.)
+- History tree size cap and pruning: Implement history node limit and pruning policy in T15 (persistent undo).
 
 ## Session log
+- 2026-10-13 · Antigravity · T03 · kiln-core editing model: Buffer, Range, Selections, ChangeSet, Transaction, UndoTree, Marks, comprehensive unit tests, proptests, and 100 MB buffer benchmark.
 - 2026-10-13 · Antigravity · T02 · kiln-text primitives, rope wrapper, graphemes, line endings, encoding, binary detection, proptests, and 100 MB criterion benchmark.
 - 2026-10-13 · Antigravity · T01 · Workspace skeleton, CI workflow, clippy/fmt clean, check-deps.sh passing, benchmark skeleton compiled.
 

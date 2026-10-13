@@ -40,13 +40,13 @@ declare -A ALLOWED_INTERNAL_DEPS=(
 # ==============================================================================
 # ALLOWED EXTERNAL DEPENDENCIES TABLE FOR LIBRARY CRATES
 # ==============================================================================
-# Only kiln-text is permitted external dependencies in T02.
+# Only kiln-text and kiln-core are permitted external dependencies at this point.
 # All other library crates must remain completely external-dependency-free.
 # ==============================================================================
 
 declare -A ALLOWED_EXTERNAL_DEPS=(
     ["kiln-text"]="ropey unicode-segmentation unicode-width thiserror proptest"
-    ["kiln-core"]=""
+    ["kiln-core"]="thiserror proptest"
     ["kiln-syntax"]=""
     ["kiln-config"]=""
     ["kiln-services"]=""

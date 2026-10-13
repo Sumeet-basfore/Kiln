@@ -15,6 +15,7 @@ workspace = true
 [dev-dependencies]
 criterion = { workspace = true }
 kiln-text = { path = "../crates/kiln-text" }
+kiln-core = { path = "../crates/kiln-core" }
 
 [[bench]]
 name = "placeholder_bench"
@@ -25,3 +26,8 @@ path = "placeholder_bench.rs"
 name = "text_bench"
 harness = false
 path = "text_bench.rs"
+
+[[bench]]
+name = "core_bench"
+harness = false
+path = "core_bench.rs"

@@ -299,6 +299,7 @@ name = "kiln-benches"
 version = "0.0.1"
 dependencies = [
  "criterion",
+ "kiln-core",
  "kiln-text",
 ]
 
@@ -324,6 +325,8 @@ name = "kiln-core"
 version = "0.0.1"
 dependencies = [
  "kiln-text",
+ "proptest",
+ "thiserror",
 ]
 
 [[package]]
