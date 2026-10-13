@@ -158,6 +158,69 @@ fn load_default_bindings(keymaps: &mut Keymaps) {
                 arg: CommandArg::None,
             },
         ),
+        (
+            "x",
+            KeymapAction::Command {
+                name: "vim_x",
+                arg: CommandArg::None,
+            },
+        ),
+        (
+            "p",
+            KeymapAction::Command {
+                name: "vim_paste_after",
+                arg: CommandArg::None,
+            },
+        ),
+        (
+            "P",
+            KeymapAction::Command {
+                name: "vim_paste_before",
+                arg: CommandArg::None,
+            },
+        ),
+        (
+            "o",
+            KeymapAction::Command {
+                name: "vim_open_below",
+                arg: CommandArg::None,
+            },
+        ),
+        (
+            "O",
+            KeymapAction::Command {
+                name: "vim_open_above",
+                arg: CommandArg::None,
+            },
+        ),
+        (
+            "a",
+            KeymapAction::Command {
+                name: "vim_append",
+                arg: CommandArg::None,
+            },
+        ),
+        (
+            "A",
+            KeymapAction::Command {
+                name: "vim_append_line_end",
+                arg: CommandArg::None,
+            },
+        ),
+        (
+            "I",
+            KeymapAction::Command {
+                name: "vim_insert_line_start",
+                arg: CommandArg::None,
+            },
+        ),
+        (
+            "J",
+            KeymapAction::Command {
+                name: "vim_join_lines",
+                arg: CommandArg::None,
+            },
+        ),
     ];
 
     for (k_str, action) in normal_bindings {

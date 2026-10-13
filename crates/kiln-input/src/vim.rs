@@ -135,8 +135,11 @@ impl VimStateMachine {
             KeyCode::Char('k') | KeyCode::Up => self.finish_motion(Motion::Up),
             KeyCode::Char('j') | KeyCode::Down => self.finish_motion(Motion::Down),
             KeyCode::Char('w') => self.finish_motion(Motion::WordForward),
+            KeyCode::Char('W') => self.finish_motion(Motion::WordForwardBig),
             KeyCode::Char('b') => self.finish_motion(Motion::WordBackward),
+            KeyCode::Char('B') => self.finish_motion(Motion::WordBackwardBig),
             KeyCode::Char('e') => self.finish_motion(Motion::WordEnd),
+            KeyCode::Char('E') => self.finish_motion(Motion::WordEndBig),
             KeyCode::Char('^') => self.finish_motion(Motion::FirstNonBlank),
             KeyCode::Char('$') => self.finish_motion(Motion::LineEnd),
             KeyCode::Char('G') => self.finish_motion(Motion::BufferEnd),
@@ -240,8 +243,11 @@ impl VimStateMachine {
                 self.finish_action(Some(Target::Motion(Motion::Down)))
             }
             KeyCode::Char('w') => self.finish_action(Some(Target::Motion(Motion::WordForward))),
+            KeyCode::Char('W') => self.finish_action(Some(Target::Motion(Motion::WordForwardBig))),
             KeyCode::Char('b') => self.finish_action(Some(Target::Motion(Motion::WordBackward))),
+            KeyCode::Char('B') => self.finish_action(Some(Target::Motion(Motion::WordBackwardBig))),
             KeyCode::Char('e') => self.finish_action(Some(Target::Motion(Motion::WordEnd))),
+            KeyCode::Char('E') => self.finish_action(Some(Target::Motion(Motion::WordEndBig))),
             KeyCode::Char('0') => self.finish_action(Some(Target::Motion(Motion::LineStart))),
             KeyCode::Char('^') => self.finish_action(Some(Target::Motion(Motion::FirstNonBlank))),
             KeyCode::Char('$') => self.finish_action(Some(Target::Motion(Motion::LineEnd))),

@@ -29,9 +29,11 @@ fn test_command_registry_unknown_command_returns_error() {
     let mut allocator = BufferIdAllocator::new();
     let mut buffer = Buffer::new(allocator.allocate(), Text::from("Hello"));
     let mut event_bus = EventBus::new();
+    let mut registers = Registers::new();
     let mut ctx = CommandContext {
         buffer: &mut buffer,
         event_bus: &mut event_bus,
+        registers: &mut registers,
     };
 
     let err = registry
@@ -96,9 +98,11 @@ fn test_cmd_insert_text_and_event_emission() {
     // Position cursor at end (pos 5)
     buffer.set_selections(Selections::point(5));
 
+    let mut registers = Registers::new();
     let mut ctx = CommandContext {
         buffer: &mut buffer,
         event_bus: &mut event_bus,
+        registers: &mut registers,
     };
 
     let res = registry
@@ -141,9 +145,11 @@ fn test_cmd_insert_text_multi_cursor_and_selection_replace() {
     let sel = Selections::new(vec![Range::new(4, 7), Range::new(8, 11)], 0).unwrap();
     buffer.set_selections(sel);
 
+    let mut registers = Registers::new();
     let mut ctx = CommandContext {
         buffer: &mut buffer,
         event_bus: &mut event_bus,
+        registers: &mut registers,
     };
 
     registry
@@ -164,9 +170,11 @@ fn test_cmd_delete_char_and_backspace_boundaries() {
     // 1. delete_char at start: deletes 'A'
     buffer.set_selections(Selections::point(0));
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute("delete_char", &mut ctx, &CommandArg::None)
@@ -177,9 +185,11 @@ fn test_cmd_delete_char_and_backspace_boundaries() {
     // 2. delete_char beyond end of doc is a no-op and does not panic
     buffer.set_selections(Selections::point(2));
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         let res = registry
             .execute("delete_char", &mut ctx, &CommandArg::None)
@@ -190,9 +200,11 @@ fn test_cmd_delete_char_and_backspace_boundaries() {
 
     // 3. backspace at end: deletes 'C'
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute("backspace", &mut ctx, &CommandArg::None)
@@ -203,9 +215,11 @@ fn test_cmd_delete_char_and_backspace_boundaries() {
     // 4. backspace at start (pos 0) is a no-op and does not panic
     buffer.set_selections(Selections::point(0));
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         let res = registry
             .execute("backspace", &mut ctx, &CommandArg::None)
@@ -226,9 +240,11 @@ fn test_cmd_newline_and_move_cursor() {
 
     // Move cursor right by 3
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute(
@@ -242,9 +258,11 @@ fn test_cmd_newline_and_move_cursor() {
 
     // Move to LineEnd
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute(
@@ -259,9 +277,11 @@ fn test_cmd_newline_and_move_cursor() {
 
     // Insert newline
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute("newline", &mut ctx, &CommandArg::None)
@@ -272,9 +292,11 @@ fn test_cmd_newline_and_move_cursor() {
 
     // Move Down
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute(
@@ -308,9 +330,11 @@ fn test_cmd_undo_and_redo() {
 
     // Edit 1: Insert " Edit"
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute(
@@ -324,9 +348,11 @@ fn test_cmd_undo_and_redo() {
 
     // Execute Undo
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute("undo", &mut ctx, &CommandArg::None)
@@ -336,9 +362,11 @@ fn test_cmd_undo_and_redo() {
 
     // Execute Redo
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         registry
             .execute("redo", &mut ctx, &CommandArg::None)
@@ -348,9 +376,11 @@ fn test_cmd_undo_and_redo() {
 
     // Redo again when at leaf is a no-op
     {
+        let mut registers = Registers::new();
         let mut ctx = CommandContext {
             buffer: &mut buffer,
             event_bus: &mut event_bus,
+            registers: &mut registers,
         };
         let res = registry
             .execute("redo", &mut ctx, &CommandArg::None)

@@ -24,10 +24,16 @@ pub enum Motion {
     Down,
     /// Forward to start of next word (`w`).
     WordForward,
+    /// Forward to start of next WORDS (`W`).
+    WordForwardBig,
     /// Backward to start of previous word (`b`).
     WordBackward,
+    /// Backward to start of previous WORDS (`B`).
+    WordBackwardBig,
     /// Forward to end of word (`e`).
     WordEnd,
+    /// Forward to end of WORDS (`E`).
+    WordEndBig,
     /// Start of current line (`0`).
     LineStart,
     /// End of current line (`$`).

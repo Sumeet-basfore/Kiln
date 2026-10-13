@@ -45,6 +45,56 @@ pub fn register_builtins(registry: &mut CommandRegistry) {
         description: "Redo the previously undone change",
         handler: cmd_redo,
     });
+    registry.register(CommandMeta {
+        name: "vim_x",
+        description: "Delete character under cursor and yank to register",
+        handler: cmd_vim_x,
+    });
+    registry.register(CommandMeta {
+        name: "vim_paste_after",
+        description: "Paste register content after cursor",
+        handler: cmd_vim_paste_after,
+    });
+    registry.register(CommandMeta {
+        name: "vim_paste_before",
+        description: "Paste register content before cursor",
+        handler: cmd_vim_paste_before,
+    });
+    registry.register(CommandMeta {
+        name: "vim_open_below",
+        description: "Open line below cursor",
+        handler: cmd_vim_open_below,
+    });
+    registry.register(CommandMeta {
+        name: "vim_open_above",
+        description: "Open line above cursor",
+        handler: cmd_vim_open_above,
+    });
+    registry.register(CommandMeta {
+        name: "vim_append",
+        description: "Append after cursor",
+        handler: cmd_vim_append,
+    });
+    registry.register(CommandMeta {
+        name: "vim_append_line_end",
+        description: "Append at end of line",
+        handler: cmd_vim_append_line_end,
+    });
+    registry.register(CommandMeta {
+        name: "vim_insert",
+        description: "Insert at cursor",
+        handler: cmd_vim_insert,
+    });
+    registry.register(CommandMeta {
+        name: "vim_insert_line_start",
+        description: "Insert at first non-blank character of line",
+        handler: cmd_vim_insert_line_start,
+    });
+    registry.register(CommandMeta {
+        name: "vim_join_lines",
+        description: "Join current line with next line",
+        handler: cmd_vim_join_lines,
+    });
 }
 
 /// Command: `insert_text`
@@ -409,4 +459,367 @@ pub fn cmd_redo(
             count_applied: 0,
         })
     }
+}
+
+/// Command: `vim_x`
+///
+/// Deletes the character under the cursor and yanks it to the unnamed register.
+pub fn cmd_vim_x(
+    ctx: &mut CommandContext<'_>,
+    arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let count = match arg {
+        CommandArg::Count(c) => *c,
+        CommandArg::None => 1,
+        _ => {
+            return Err(CoreError::InvalidArgument {
+                message: "vim_x accepts Count or None",
+            })
+        }
+    };
+
+    let doc_len = ctx.buffer.text().len_chars();
+    if doc_len == 0 {
+        return Ok(CommandResult::default());
+    }
+
+    let head = ctx.buffer.selections().primary().head;
+    if head >= doc_len {
+        return Ok(CommandResult::default());
+    }
+
+    let end = (head + count).min(doc_len);
+    if let Ok(deleted) = ctx.buffer.text().slice(head..end) {
+        ctx.registers.set(
+            None,
+            crate::register::RegisterValue::character(deleted.to_string()),
+        );
+    }
+
+    let tx = Transaction::delete_range(doc_len, head..end)?;
+    let buffer_id = ctx.buffer.id();
+    let res = ctx.buffer.apply(tx)?;
+
+    ctx.event_bus.publish(EditorEvent::BufferChanged {
+        buffer_id,
+        old_version: res.old_version,
+        new_version: res.new_version,
+        transaction: res.transaction,
+    });
+
+    Ok(CommandResult {
+        affected_buffer: Some(buffer_id),
+        count_applied: 1,
+    })
+}
+
+/// Command: `vim_paste_after`
+///
+/// Pastes register content after cursor (or on the next line if linewise).
+pub fn cmd_vim_paste_after(
+    ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let reg_val = match ctx.registers.get(None) {
+        Some(v) => v.clone(),
+        None => return Ok(CommandResult::default()),
+    };
+
+    let doc_len = ctx.buffer.text().len_chars();
+    let head = ctx.buffer.selections().primary().head;
+
+    let (insert_pos, insert_text) = if reg_val.is_linewise {
+        let line_idx = ctx
+            .buffer
+            .text()
+            .char_to_line_col(head)
+            .map(|lc| lc.line)
+            .unwrap_or(0);
+        let next_line_start = ctx
+            .buffer
+            .text()
+            .line_col_to_char(kiln_text::LineCol::new(line_idx + 1, 0))
+            .unwrap_or(doc_len);
+        let text = if reg_val.text.ends_with('\n') {
+            reg_val.text
+        } else {
+            format!("{}\n", reg_val.text)
+        };
+        (next_line_start, text)
+    } else {
+        let pos = (head + 1).min(doc_len);
+        (pos, reg_val.text)
+    };
+
+    let tx = Transaction::insert_at(doc_len, insert_pos, &insert_text)?;
+    let buffer_id = ctx.buffer.id();
+    let res = ctx.buffer.apply(tx)?;
+
+    ctx.event_bus.publish(EditorEvent::BufferChanged {
+        buffer_id,
+        old_version: res.old_version,
+        new_version: res.new_version,
+        transaction: res.transaction,
+    });
+
+    Ok(CommandResult {
+        affected_buffer: Some(buffer_id),
+        count_applied: 1,
+    })
+}
+
+/// Command: `vim_paste_before`
+///
+/// Pastes register content before cursor (or on the current line if linewise).
+pub fn cmd_vim_paste_before(
+    ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let reg_val = match ctx.registers.get(None) {
+        Some(v) => v.clone(),
+        None => return Ok(CommandResult::default()),
+    };
+
+    let doc_len = ctx.buffer.text().len_chars();
+    let head = ctx.buffer.selections().primary().head;
+
+    let (insert_pos, insert_text) = if reg_val.is_linewise {
+        let line_idx = ctx
+            .buffer
+            .text()
+            .char_to_line_col(head)
+            .map(|lc| lc.line)
+            .unwrap_or(0);
+        let line_start = ctx
+            .buffer
+            .text()
+            .line_col_to_char(kiln_text::LineCol::new(line_idx, 0))
+            .unwrap_or(0);
+        let text = if reg_val.text.ends_with('\n') {
+            reg_val.text
+        } else {
+            format!("{}\n", reg_val.text)
+        };
+        (line_start, text)
+    } else {
+        (head, reg_val.text)
+    };
+
+    let tx = Transaction::insert_at(doc_len, insert_pos, &insert_text)?;
+    let buffer_id = ctx.buffer.id();
+    let res = ctx.buffer.apply(tx)?;
+
+    ctx.event_bus.publish(EditorEvent::BufferChanged {
+        buffer_id,
+        old_version: res.old_version,
+        new_version: res.new_version,
+        transaction: res.transaction,
+    });
+
+    Ok(CommandResult {
+        affected_buffer: Some(buffer_id),
+        count_applied: 1,
+    })
+}
+
+/// Command: `vim_open_below`
+///
+/// Inserts a newline at the end of the current line and positions cursor there.
+pub fn cmd_vim_open_below(
+    ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let doc_len = ctx.buffer.text().len_chars();
+    let head = ctx.buffer.selections().primary().head;
+    let line_idx = ctx
+        .buffer
+        .text()
+        .char_to_line_col(head)
+        .map(|lc| lc.line)
+        .unwrap_or(0);
+
+    let line_str = ctx.buffer.text().line(line_idx).unwrap_or_default();
+    let has_newline = line_str.ends_with('\n');
+    let line_start = ctx
+        .buffer
+        .text()
+        .line_col_to_char(kiln_text::LineCol::new(line_idx, 0))
+        .unwrap_or(0);
+    let line_end = line_start + line_str.chars().count();
+
+    let (insert_pos, cursor_pos) = if has_newline {
+        (line_end, line_end)
+    } else {
+        (line_end, line_end + 1)
+    };
+
+    let mut tx = Transaction::insert_at(doc_len, insert_pos, "\n")?;
+    tx.selections_after = Some(Selections::point(cursor_pos));
+
+    let buffer_id = ctx.buffer.id();
+    let res = ctx.buffer.apply(tx)?;
+
+    ctx.event_bus.publish(EditorEvent::BufferChanged {
+        buffer_id,
+        old_version: res.old_version,
+        new_version: res.new_version,
+        transaction: res.transaction,
+    });
+
+    Ok(CommandResult {
+        affected_buffer: Some(buffer_id),
+        count_applied: 1,
+    })
+}
+
+/// Command: `vim_open_above`
+///
+/// Inserts a newline at the start of the current line and positions cursor there.
+pub fn cmd_vim_open_above(
+    ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let doc_len = ctx.buffer.text().len_chars();
+    let head = ctx.buffer.selections().primary().head;
+    let line_idx = ctx
+        .buffer
+        .text()
+        .char_to_line_col(head)
+        .map(|lc| lc.line)
+        .unwrap_or(0);
+
+    let line_start = ctx
+        .buffer
+        .text()
+        .line_col_to_char(kiln_text::LineCol::new(line_idx, 0))
+        .unwrap_or(0);
+
+    let mut tx = Transaction::insert_at(doc_len, line_start, "\n")?;
+    tx.selections_after = Some(Selections::point(line_start));
+
+    let buffer_id = ctx.buffer.id();
+    let res = ctx.buffer.apply(tx)?;
+
+    ctx.event_bus.publish(EditorEvent::BufferChanged {
+        buffer_id,
+        old_version: res.old_version,
+        new_version: res.new_version,
+        transaction: res.transaction,
+    });
+
+    Ok(CommandResult {
+        affected_buffer: Some(buffer_id),
+        count_applied: 1,
+    })
+}
+
+/// Command: `vim_append`
+///
+/// Moves cursor 1 grapheme right (for entering insert mode).
+pub fn cmd_vim_append(
+    ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let doc_len = ctx.buffer.text().len_chars();
+    let head = ctx.buffer.selections().primary().head;
+    let new_head = (head + 1).min(doc_len);
+    ctx.buffer.set_selections(Selections::point(new_head));
+    Ok(CommandResult::default())
+}
+
+/// Command: `vim_append_line_end`
+///
+/// Moves cursor to the end of the line (for entering insert mode).
+pub fn cmd_vim_append_line_end(
+    ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let head = ctx.buffer.selections().primary().head;
+    let end = crate::motion::MotionEvaluator::line_end(ctx.buffer.text(), head);
+    ctx.buffer.set_selections(Selections::point(end));
+    Ok(CommandResult::default())
+}
+
+/// Command: `vim_insert`
+///
+/// Prepares for insert mode at the current cursor position.
+pub fn cmd_vim_insert(
+    _ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    Ok(CommandResult::default())
+}
+
+/// Command: `vim_insert_line_start`
+///
+/// Moves cursor to the first non-blank character of the line.
+pub fn cmd_vim_insert_line_start(
+    ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let head = ctx.buffer.selections().primary().head;
+    let first = crate::motion::MotionEvaluator::first_non_blank(ctx.buffer.text(), head);
+    ctx.buffer.set_selections(Selections::point(first));
+    Ok(CommandResult::default())
+}
+
+/// Command: `vim_join_lines`
+///
+/// Joins the current line with the next line (replaces `\n` and leading whitespace with single space).
+pub fn cmd_vim_join_lines(
+    ctx: &mut CommandContext<'_>,
+    _arg: &CommandArg,
+) -> Result<CommandResult, CoreError> {
+    let doc_len = ctx.buffer.text().len_chars();
+    let head = ctx.buffer.selections().primary().head;
+    let line_idx = ctx
+        .buffer
+        .text()
+        .char_to_line_col(head)
+        .map(|lc| lc.line)
+        .unwrap_or(0);
+
+    if line_idx + 1 >= ctx.buffer.text().len_lines() {
+        return Ok(CommandResult::default());
+    }
+
+    let line_slice = ctx.buffer.text().line(line_idx)?;
+    if !line_slice.ends_with('\n') {
+        return Ok(CommandResult::default());
+    }
+
+    let line_start = ctx
+        .buffer
+        .text()
+        .line_col_to_char(kiln_text::LineCol::new(line_idx, 0))?;
+    let newline_pos = line_start + line_slice.chars().count() - 1;
+
+    let next_line_slice = ctx.buffer.text().line(line_idx + 1)?;
+    let mut leading_ws = 0;
+    for ch in next_line_slice.chars() {
+        if ch.is_whitespace() && ch != '\n' {
+            leading_ws += 1;
+        } else {
+            break;
+        }
+    }
+
+    let del_start = newline_pos;
+    let del_end = newline_pos + 1 + leading_ws;
+
+    let tx = Transaction::replace_range(doc_len, del_start..del_end, " ")?;
+    let buffer_id = ctx.buffer.id();
+    let res = ctx.buffer.apply(tx)?;
+
+    ctx.event_bus.publish(EditorEvent::BufferChanged {
+        buffer_id,
+        old_version: res.old_version,
+        new_version: res.new_version,
+        transaction: res.transaction,
+    });
+
+    Ok(CommandResult {
+        affected_buffer: Some(buffer_id),
+        count_applied: 1,
+    })
 }

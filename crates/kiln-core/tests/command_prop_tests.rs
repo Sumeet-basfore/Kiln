@@ -13,11 +13,13 @@ proptest! {
         let mut allocator = BufferIdAllocator::new();
         let mut buffer = Buffer::new(allocator.allocate(), Text::from(initial.as_str()));
         let mut event_bus = EventBus::new();
+        let mut registers = Registers::new();
 
         for cmd_code in commands {
             let mut ctx = CommandContext {
                 buffer: &mut buffer,
                 event_bus: &mut event_bus,
+                registers: &mut registers,
             };
 
             let res = match cmd_code {

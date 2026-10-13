@@ -14,6 +14,8 @@ pub mod error;
 pub mod event;
 pub mod history;
 pub mod marks;
+pub mod motion;
+pub mod register;
 pub mod selection;
 pub mod transaction;
 
@@ -26,6 +28,8 @@ pub use error::CoreError;
 pub use event::{EditorEvent, EventBus, EventHandler, SubscriptionId};
 pub use history::{HistoryNode, NodeId, UndoTree};
 pub use marks::Marks;
+pub use motion::{MotionEvaluator, TextObjectEvaluator};
+pub use register::{RegisterValue, Registers};
 pub use selection::{Range, Selections};
 pub use transaction::{Assoc, ChangeSet, Operation, Transaction, TransactionOrigin};
 

@@ -5,6 +5,7 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 ## Decisions
 | Date | Decision | Why | Ticket |
 |---|---|---|---|
+| 2026-10-13 | Pure MotionEvaluator & TextObjectEvaluator in kiln-core; Registers on CommandContext | Keeps motion/text object logic decoupled from input layer, pure functions over Text; registers support linewise & characterwise | T06 |
 | 2026-10-13 | Terminal-independent KeyEvent & VimStateMachine in kiln-input | Zero terminal I/O dependencies; keymap trie per mode with partial match timeout and default data tables | T05 |
 | 2026-10-13 | Command registry & EventBus in kiln-core | Unified execution entry point returning typed Result; synchronous event dispatch without async or I/O | T04 |
 | 2026-10-13 | ChangeSet normalized ops representation for transactions | Retain/Delete/Insert ops merged and non-zero; inverses calculated from start text; skipping history prohibited to protect inverse integrity | T03 |
@@ -48,6 +49,7 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 - History tree size cap and pruning: Implement history node limit and pruning policy in T15 (persistent undo).
 
 ## Session log
+- 2026-10-13 · Antigravity · T06 · Vim motions (h/j/k/l/w/b/e/W/B/E/0/^/$/gg/G/f/F/t/T/;/;/%); operators (d/c/y, dd/cc/yy); commands (x/p/P/u/Ctrl-r/o/O/a/A/i/I/J); text objects (iw/aw/i"/a"/i(/a(/i{/a{); registers store; table-driven unit tests.
 - 2026-10-13 · Antigravity · T05 · kiln-input key parsing (KeyEvent, KeyCode, KeyModifiers), mode state machine (Mode, VisualKind), KeymapTrie per mode with timeouts, Vim grammar state machine (VimAction, 3dw, "ayy, d2j, ciw), InputEngine.
 - 2026-10-13 · Antigravity · T04 · kiln-core command registry, EventBus, built-in edit & motion commands (insert_text, delete_char, backspace, newline, move_cursor, undo, redo), unit tests and fuzz property tests.
 - 2026-10-13 · Antigravity · T03 · kiln-core editing model: Buffer, Range, Selections, ChangeSet, Transaction, UndoTree, Marks, comprehensive unit tests, proptests, and 100 MB buffer benchmark.

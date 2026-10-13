@@ -43,6 +43,8 @@ pub struct CommandContext<'a> {
     pub buffer: &'a mut Buffer,
     /// The event bus for publishing state changes.
     pub event_bus: &'a mut EventBus,
+    /// The register store for yanking, pasting, and deletions.
+    pub registers: &'a mut crate::register::Registers,
 }
 
 /// Outcome of executing a command.

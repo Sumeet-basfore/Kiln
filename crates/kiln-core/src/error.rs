@@ -88,4 +88,8 @@ pub enum CoreError {
         /// Description of the argument issue.
         message: &'static str,
     },
+
+    /// An underlying text manipulation error occurred.
+    #[error("Text error: {0}")]
+    Text(#[from] kiln_text::TextError),
 }
