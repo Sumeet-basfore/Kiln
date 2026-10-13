@@ -1,0 +1,39 @@
+[workspace]
+members = [
+    "crates/kiln-text",
+    "crates/kiln-core",
+    "crates/kiln-syntax",
+    "crates/kiln-config",
+    "crates/kiln-services",
+    "crates/kiln-input",
+    "crates/kiln-ui",
+    "crates/kiln-bin",
+    "benches",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.99.0"
+license = "LicenseRef-Undecided"
+authors = ["Kiln Contributors"]
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "allow"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+# Criterion dev-dependency for benchmarks
+[workspace.dependencies]
+criterion = "0.5.1"

@@ -4,13 +4,13 @@ Update this file at the end of every ticket. Status values: `todo`, `in-progress
 
 ## Current state
 - Active milestone: 0.1 Foundation
-- Last updated: (fill in)
+- Last updated: 2026-10-13
 - Open decisions blocking work: see "Decisions" below
 
 ## Decisions needed before coding (from TDD section 18)
 | # | Decision | Status | Outcome |
 |---|---|---|---|
-| D1 | Confirm Rust crate layout | todo | |
+| D1 | Confirm Rust crate layout | done | 2026-10-13: Workspace layout verified with 8 crates |
 | D2 | Rendering: ratatui vs custom renderer (prototype and measure) | todo | |
 | D3 | Terminal emulator crate for agent panes (spike) | todo | |
 | D4 | Vim compatibility list for 0.1 and 0.2 | todo | |
@@ -20,7 +20,7 @@ Update this file at the end of every ticket. Status values: `todo`, `in-progress
 ## Tickets
 | ID | Milestone | Title | Status | Date | Notes |
 |---|---|---|---|---|---|
-| T01 | 0.1 | Workspace, CI, lint, benchmark skeleton | todo | | |
+| T01 | 0.1 | Workspace, CI, lint, benchmark skeleton | done | 2026-10-13 | 8 crates, downward deps check, CI, bench skeleton |
 | T02 | 0.1 | kiln-text: rope wrapper, graphemes, line endings, encoding | todo | | |
 | T03 | 0.1 | kiln-core: buffer, selection, transaction, undo tree | todo | | |
 | T04 | 0.1 | kiln-core: command registry and basic edit commands | todo | | |
