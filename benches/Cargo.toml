@@ -16,6 +16,7 @@ workspace = true
 criterion = { workspace = true }
 kiln-text = { path = "../crates/kiln-text" }
 kiln-core = { path = "../crates/kiln-core" }
+kiln-ui = { path = "../crates/kiln-ui" }
 
 [[bench]]
 name = "placeholder_bench"
@@ -31,3 +32,8 @@ path = "text_bench.rs"
 name = "core_bench"
 harness = false
 path = "core_bench.rs"
+
+[[bench]]
+name = "ui_bench"
+harness = false
+path = "ui_bench.rs"

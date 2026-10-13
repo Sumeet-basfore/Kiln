@@ -51,7 +51,7 @@ declare -A ALLOWED_EXTERNAL_DEPS=(
     ["kiln-config"]=""
     ["kiln-services"]=""
     ["kiln-input"]=""
-    ["kiln-ui"]=""
+    ["kiln-ui"]="ratatui crossterm unicode-width thiserror"
 )
 
 LIBRARY_CRATES=(

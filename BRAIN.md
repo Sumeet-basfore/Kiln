@@ -5,6 +5,8 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 ## Decisions
 | Date | Decision | Why | Ticket |
 |---|---|---|---|
+| 2026-10-13 | D2 confirmed: Renderer trait with ratatui+crossterm backend and TestRenderer | Decouples view logic from terminal engine; 200x60 frame render time ~161 µs (top), ~168 µs (middle), well below 16 ms budget | T07 |
+| 2026-10-13 | TerminalGuard RAII and panic hook for terminal state restoration | Guarantees raw mode, alternate screen, and cursor visibility are always restored on exit or panic | T07 |
 | 2026-10-13 | Pure MotionEvaluator & TextObjectEvaluator in kiln-core; Registers on CommandContext | Keeps motion/text object logic decoupled from input layer, pure functions over Text; registers support linewise & characterwise | T06 |
 | 2026-10-13 | Terminal-independent KeyEvent & VimStateMachine in kiln-input | Zero terminal I/O dependencies; keymap trie per mode with partial match timeout and default data tables | T05 |
 | 2026-10-13 | Command registry & EventBus in kiln-core | Unified execution entry point returning typed Result; synchronous event dispatch without async or I/O | T04 |
@@ -25,12 +27,13 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 | (setup) | Project config `.kiln.toml` requires a trust prompt | It can launch commands | T28 |
 
 ## Open decisions
-- D2 ratatui vs custom renderer · D3 terminal emulator crate · D4 Vim compatibility list · D5 license · D6 name clearance. Details in `context/progress-tracker.md`.
+- D3 terminal emulator crate · D4 Vim compatibility list · D5 license · D6 name clearance. Details in `context/progress-tracker.md`.
 - Git library: `gix` vs `git2` (decide in T20).
 - Grammars: bundled only, or downloaded on demand (and if downloaded, how to verify them).
 - Which agent protocol for v2 (ACP, MCP or both).
 
 ## Gotchas and lessons
+- 2026-10-13 · T07 · Criterion benchmark on 100 MB buffer at 200x60 viewport: `render_frame_top_200x60_100mb`: ~161.31 µs; `render_frame_middle_200x60_100mb`: ~168.53 µs. Both are ~95x faster than the 16 ms keystroke-to-screen budget.
 - 2026-10-13 · T03 · Criterion benchmark on 100 MB buffer: `apply_1char_insert` scales with $O(\log N)$ across file sizes (1 MB: 1.20 µs, 10 MB: 1.44 µs, 100 MB: 1.63 µs); `apply_100char_replace_100mb`: 1.73 µs; `apply_100_scattered_edits_100mb`: 160.03 µs; `undo_1char_insert_100mb`: 2.39 µs; `invert_only_100char_replace_100mb`: 160.51 ns; `map_1000_marks`: 1.08 µs.
 - 2026-10-13 · T03 · Benchmarks must use `black_box` and the budgets come from the PRD, never invented. An earlier apply benchmark showed ~179 ms because `ChangeSet::apply` rebuilt an entire new `Text` rope by slicing and re-inserting all retained characters, which was $O(N)$ with ~100 MB allocations. Making `apply` incremental via `text.clone()` and in-place `remove`/`insert` on mutations dropped single-edit application from 179 ms down to 1.63 µs (~110,000x speedup).
 - 2026-10-13 · T02 · Criterion benchmark numbers on 100 MB rope (~104.8M chars, ~1.12M lines): `read_slice_middle` (1000 chars): ~311 ns; `char_to_line_col`: ~166 ns; `insert_remove_middle` (100 chars): ~451 ns.
@@ -49,6 +52,7 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 - History tree size cap and pruning: Implement history node limit and pruning policy in T15 (persistent undo).
 
 ## Session log
+- 2026-10-13 · Antigravity · T07 · kiln-ui: Renderer trait, RatatuiRenderer, TestRenderer, BufferView with scrolloff & selections, Gutter (hybrid), StatusLine with responsive truncation, DarkTheme, TerminalGuard & panic hook; snapshot, resize, and terminal tests; 200x60 frame benchmark.
 - 2026-10-13 · Antigravity · T06 · Vim motions (h/j/k/l/w/b/e/W/B/E/0/^/$/gg/G/f/F/t/T/;/;/%); operators (d/c/y, dd/cc/yy); commands (x/p/P/u/Ctrl-r/o/O/a/A/i/I/J); text objects (iw/aw/i"/a"/i(/a(/i{/a{); registers store; table-driven unit tests.
 - 2026-10-13 · Antigravity · T05 · kiln-input key parsing (KeyEvent, KeyCode, KeyModifiers), mode state machine (Mode, VisualKind), KeymapTrie per mode with timeouts, Vim grammar state machine (VimAction, 3dw, "ayy, d2j, ciw), InputEngine.
 - 2026-10-13 · Antigravity · T04 · kiln-core command registry, EventBus, built-in edit & motion commands (insert_text, delete_char, backspace, newline, move_cursor, undo, redo), unit tests and fuzz property tests.

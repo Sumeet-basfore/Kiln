@@ -27,6 +27,7 @@ pub use command::{
 pub use error::CoreError;
 pub use event::{EditorEvent, EventBus, EventHandler, SubscriptionId};
 pub use history::{HistoryNode, NodeId, UndoTree};
+pub use kiln_text::{LineCol, Text};
 pub use marks::Marks;
 pub use motion::{MotionEvaluator, TextObjectEvaluator};
 pub use register::{RegisterValue, Registers};

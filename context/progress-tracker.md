@@ -11,7 +11,7 @@ Update this file at the end of every ticket. Status values: `todo`, `in-progress
 | # | Decision | Status | Outcome |
 |---|---|---|---|
 | D1 | Confirm Rust crate layout | done | 2026-10-13: Workspace layout verified with 8 crates |
-| D2 | Rendering: ratatui vs custom renderer (prototype and measure) | todo | |
+| D2 | Rendering: ratatui vs custom renderer (prototype and measure) | done | 2026-10-13: Renderer trait, RatatuiRenderer & TestRenderer; 200x60 bench: ~161 µs (top), ~168 µs (middle) |
 | D3 | Terminal emulator crate for agent panes (spike) | todo | |
 | D4 | Vim compatibility list for 0.1 and 0.2 | todo | |
 | D5 | License | todo | |
@@ -26,7 +26,7 @@ Update this file at the end of every ticket. Status values: `todo`, `in-progress
 | T04 | 0.1 | kiln-core: command registry and basic edit commands | done | 2026-10-13 | Command registry, EventBus, built-in edit & motion commands, fuzz tests |
 | T05 | 0.1 | kiln-input: key parsing, mode state machine, keymaps | done | 2026-10-13 | Terminal-agnostic KeyEvent, Mode, KeymapTrie, VimStateMachine (3dw, \"ayy, d2j, ciw), InputEngine |
 | T06 | 0.1 | Vim motions and operators, first batch | done | 2026-10-13 | Motions (h/j/k/l/w/b/e/W/B/E/0/^/$/gg/G/f/F/t/T/;/;/%); operators (d/c/y, dd/cc/yy); commands (x/p/P/u/Ctrl-r/o/O/a/A/i/I/J); text objects (iw/aw/i"/a"/i(/a(/i{/a{); registers |
-| T07 | 0.1 | kiln-ui: buffer view, status line, cursor, dark theme | todo | | |
+| T07 | 0.1 | kiln-ui: buffer view, status line, cursor, dark theme | done | 2026-10-13 | Renderer trait, RatatuiRenderer, TestRenderer, BufferView, Gutter (hybrid), StatusLine, DarkTheme, TerminalGuard panic hook, 200x60 bench |
 | T08 | 0.1 | File open, atomic save, headless test harness | todo | | |
 | T09 | 0.1 | kiln-config: TOML config with defaults and validation | todo | | |
 | T10 | 0.2 | Splits, tabs, multiple buffers | todo | | |
