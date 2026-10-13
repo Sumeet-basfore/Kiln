@@ -5,6 +5,8 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 ## Decisions
 | Date | Decision | Why | Ticket |
 |---|---|---|---|
+| 2026-10-13 | Normalized `\n` in Text rope; denormalize on save | Clean char offsets, column math, and tree-sitter sync without CRLF double-offset complications | T02 |
+| 2026-10-13 | External crates in kiln-text: ropey, unicode-segmentation, unicode-width, thiserror | Drop encoding_rs in favor of manual standards-compliant UTF-8/UTF-16/Latin-1 decoding | T02 |
 | 2026-10-13 | `kiln-benches` as tooling package | `benches/` is developer tooling, not a product crate; ignored by check-deps.sh | T01 |
 | 2026-10-13 | scripts/check-deps.sh for dependency-direction check | Fast, zero compile overhead in CI and local checks, strictly enforces downward rules | T01 |
 | 2026-10-13 | D1 Crate layout confirmed: 8 crates + benches | Verified according to architecture-context.md; downward dependencies only | T01 |
@@ -22,6 +24,8 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 - Which agent protocol for v2 (ACP, MCP or both).
 
 ## Gotchas and lessons
+- 2026-10-13 · T02 · Criterion benchmark numbers on 100 MB rope (~104.8M chars, ~1.12M lines): `read_slice_middle` (1000 chars): ~311 ns; `char_to_line_col`: ~166 ns; `insert_remove_middle` (100 chars): ~451 ns.
+- 2026-10-13 · T02 · In deny.toml `[bans]`, `allow-workspace = true` and `wildcards = "allow"` are required when workspace crates reference path dependencies without version numbers.
 - 2026-10-13 · T01 · In Cargo virtual workspaces, `benches/` needs its own package manifest or membership in `[workspace.members]` to run `cargo bench`.
 - 2026-10-13 · T01 · Setting lint groups alongside individual lints in `[workspace.lints.rust]` requires explicit priorities (e.g. `priority = -1`) to satisfy `clippy::lint_groups_priority`.
 
@@ -35,5 +39,6 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 (Things deliberately postponed, each with the ticket that should pick them up.)
 
 ## Session log
+- 2026-10-13 · Antigravity · T02 · kiln-text primitives, rope wrapper, graphemes, line endings, encoding, binary detection, proptests, and 100 MB criterion benchmark.
 - 2026-10-13 · Antigravity · T01 · Workspace skeleton, CI workflow, clippy/fmt clean, check-deps.sh passing, benchmark skeleton compiled.
 

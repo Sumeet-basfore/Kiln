@@ -21,7 +21,7 @@ Update this file at the end of every ticket. Status values: `todo`, `in-progress
 | ID | Milestone | Title | Status | Date | Notes |
 |---|---|---|---|---|---|
 | T01 | 0.1 | Workspace, CI, lint, benchmark skeleton | done | 2026-10-13 | 8 crates, downward deps check, CI, bench skeleton |
-| T02 | 0.1 | kiln-text: rope wrapper, graphemes, line endings, encoding | todo | | |
+| T02 | 0.1 | kiln-text: rope wrapper, graphemes, line endings, encoding | done | 2026-10-13 | Rope wrapper, conversions, graphemes, line endings, encodings, binary sniffing |
 | T03 | 0.1 | kiln-core: buffer, selection, transaction, undo tree | todo | | |
 | T04 | 0.1 | kiln-core: command registry and basic edit commands | todo | | |
 | T05 | 0.1 | kiln-input: key parsing, mode state machine, keymaps | todo | | |

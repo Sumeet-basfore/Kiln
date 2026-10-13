@@ -14,8 +14,14 @@ workspace = true
 # Criterion: benchmark framework for performance budgets
 [dev-dependencies]
 criterion = { workspace = true }
+kiln-text = { path = "../crates/kiln-text" }
 
 [[bench]]
 name = "placeholder_bench"
 harness = false
 path = "placeholder_bench.rs"
+
+[[bench]]
+name = "text_bench"
+harness = false
+path = "text_bench.rs"

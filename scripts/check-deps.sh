@@ -4,7 +4,7 @@ set -euo pipefail
 # scripts/check-deps.sh
 # Verifies that dependencies between crates point downward only,
 # strictly enforcing the architecture dependency rules.
-# Also verifies that no library crate lists external dependencies for now.
+# Also verifies that only explicitly allowed external dependencies are used.
 # Note: kiln-benches is developer tooling, not a product crate, and is ignored.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -35,6 +35,23 @@ declare -A ALLOWED_INTERNAL_DEPS=(
     ["kiln-input"]="kiln-core kiln-config"
     ["kiln-ui"]="kiln-core kiln-config"
     ["kiln-bin"]="kiln-text kiln-core kiln-syntax kiln-config kiln-services kiln-input kiln-ui"
+)
+
+# ==============================================================================
+# ALLOWED EXTERNAL DEPENDENCIES TABLE FOR LIBRARY CRATES
+# ==============================================================================
+# Only kiln-text is permitted external dependencies in T02.
+# All other library crates must remain completely external-dependency-free.
+# ==============================================================================
+
+declare -A ALLOWED_EXTERNAL_DEPS=(
+    ["kiln-text"]="ropey unicode-segmentation unicode-width thiserror proptest"
+    ["kiln-core"]=""
+    ["kiln-syntax"]=""
+    ["kiln-config"]=""
+    ["kiln-services"]=""
+    ["kiln-input"]=""
+    ["kiln-ui"]=""
 )
 
 LIBRARY_CRATES=(
@@ -82,7 +99,8 @@ for crate in "${ALL_PRODUCT_CRATES[@]}"; do
         continue
     fi
 
-    allowed="${ALLOWED_INTERNAL_DEPS[$crate]}"
+    allowed_internal="${ALLOWED_INTERNAL_DEPS[$crate]}"
+    allowed_external="${ALLOWED_EXTERNAL_DEPS[$crate]:-}"
     deps=$(extract_deps "$manifest" || true)
 
     for dep in $deps; do
@@ -97,7 +115,7 @@ for crate in "${ALL_PRODUCT_CRATES[@]}"; do
         if [ "$is_workspace_crate" -eq 1 ]; then
             # Check internal dependency direction
             is_allowed=0
-            for item in $allowed; do
+            for item in $allowed_internal; do
                 if [ "$item" = "$dep" ]; then
                     is_allowed=1
                     break
@@ -109,17 +127,17 @@ for crate in "${ALL_PRODUCT_CRATES[@]}"; do
                 FAILED=1
             fi
         else
-            # For now, library crates must not have external dependencies
-            is_lib=0
-            for lib in "${LIBRARY_CRATES[@]}"; do
-                if [ "$crate" = "$lib" ]; then
-                    is_lib=1
+            # Check external dependency against allowed external table
+            is_allowed=0
+            for item in $allowed_external; do
+                if [ "$item" = "$dep" ]; then
+                    is_allowed=1
                     break
                 fi
             done
 
-            if [ "$is_lib" -eq 1 ]; then
-                echo "FAIL: Library crate '$crate' has disallowed external dependency '$dep'!"
+            if [ "$is_allowed" -eq 0 ]; then
+                echo "FAIL: Crate '$crate' has disallowed external dependency '$dep'!"
                 FAILED=1
             fi
         fi
