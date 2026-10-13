@@ -28,7 +28,8 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 - Which agent protocol for v2 (ACP, MCP or both).
 
 ## Gotchas and lessons
-- 2026-10-13 · T03 · Criterion benchmark on 100 MB buffer (~104.8M chars): `apply_and_undo_transaction_100mb`: ~179 ms (well within 200 ms budget); `map_1000_marks` across transaction: ~1.04 µs.
+- 2026-10-13 · T03 · Criterion benchmark on 100 MB buffer: `apply_1char_insert` scales with $O(\log N)$ across file sizes (1 MB: 1.20 µs, 10 MB: 1.44 µs, 100 MB: 1.63 µs); `apply_100char_replace_100mb`: 1.73 µs; `apply_100_scattered_edits_100mb`: 160.03 µs; `undo_1char_insert_100mb`: 2.39 µs; `invert_only_100char_replace_100mb`: 160.51 ns; `map_1000_marks`: 1.08 µs.
+- 2026-10-13 · T03 · Benchmarks must use `black_box` and the budgets come from the PRD, never invented. An earlier apply benchmark showed ~179 ms because `ChangeSet::apply` rebuilt an entire new `Text` rope by slicing and re-inserting all retained characters, which was $O(N)$ with ~100 MB allocations. Making `apply` incremental via `text.clone()` and in-place `remove`/`insert` on mutations dropped single-edit application from 179 ms down to 1.63 µs (~110,000x speedup).
 - 2026-10-13 · T02 · Criterion benchmark numbers on 100 MB rope (~104.8M chars, ~1.12M lines): `read_slice_middle` (1000 chars): ~311 ns; `char_to_line_col`: ~166 ns; `insert_remove_middle` (100 chars): ~451 ns.
 - 2026-10-13 · T02 · In deny.toml `[bans]`, `allow-workspace = true` and `wildcards = "allow"` are required when workspace crates reference path dependencies without version numbers.
 - 2026-10-13 · T01 · In Cargo virtual workspaces, `benches/` needs its own package manifest or membership in `[workspace.members]` to run `cargo bench`.

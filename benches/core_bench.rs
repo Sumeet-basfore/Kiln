@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 use kiln_core::{Buffer, BufferIdAllocator, Marks, Transaction};
 use kiln_text::Text;
 
@@ -22,33 +22,136 @@ fn build_large_text(target_mb: usize) -> Text {
 }
 
 fn bench_core_operations(c: &mut Criterion) {
-    let mut group = c.benchmark_group("core_100mb");
+    let mut group = c.benchmark_group("core_bench");
     group.sample_size(10);
 
-    println!("Constructing 100 MB buffer for core benchmark...");
-    let large_text = build_large_text(100);
+    println!("Constructing texts for core benchmarks (1 MB, 10 MB, 100 MB)...");
+    let text_1mb = build_large_text(1);
+    let text_10mb = build_large_text(10);
+    let text_100mb = build_large_text(100);
+
     let mut allocator = BufferIdAllocator::new();
-    let id = allocator.allocate();
-    let mut buffer = Buffer::new(id, large_text);
-    println!("100 MB buffer ready: {} chars", buffer.text().len_chars());
+    let proto_buf_1mb = Buffer::new(allocator.allocate(), text_1mb);
+    let proto_buf_10mb = Buffer::new(allocator.allocate(), text_10mb);
+    let proto_buf_100mb = Buffer::new(allocator.allocate(), text_100mb);
 
-    let mid = buffer.text().len_chars() / 2;
+    // (a) Apply a one-character insert in the middle across 1 MB, 10 MB, 100 MB
+    let mid_1mb = proto_buf_1mb.text().len_chars() / 2;
+    let tx_1char_1mb =
+        Transaction::insert_at(proto_buf_1mb.text().len_chars(), mid_1mb, "X").unwrap();
 
-    // 1. Applying a small insert transaction to a ~100 MB buffer (and undoing)
-    group.bench_function("apply_and_undo_transaction_100mb", |b| {
+    group.bench_function("apply_1char_insert_1mb", |b| {
+        b.iter_batched(
+            || proto_buf_1mb.clone(),
+            |mut buf| {
+                let res = buf.apply(black_box(tx_1char_1mb.clone())).unwrap();
+                black_box(res);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+
+    let mid_10mb = proto_buf_10mb.text().len_chars() / 2;
+    let tx_1char_10mb =
+        Transaction::insert_at(proto_buf_10mb.text().len_chars(), mid_10mb, "X").unwrap();
+
+    group.bench_function("apply_1char_insert_10mb", |b| {
+        b.iter_batched(
+            || proto_buf_10mb.clone(),
+            |mut buf| {
+                let res = buf.apply(black_box(tx_1char_10mb.clone())).unwrap();
+                black_box(res);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+
+    let mid_100mb = proto_buf_100mb.text().len_chars() / 2;
+    let tx_1char_100mb =
+        Transaction::insert_at(proto_buf_100mb.text().len_chars(), mid_100mb, "X").unwrap();
+
+    group.bench_function("apply_1char_insert_100mb", |b| {
+        b.iter_batched(
+            || proto_buf_100mb.clone(),
+            |mut buf| {
+                let res = buf.apply(black_box(tx_1char_100mb.clone())).unwrap();
+                black_box(res);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+
+    // (b) Apply a 100-character replacement in the middle (100 MB)
+    let replacement = "0123456789".repeat(10);
+    let tx_100char_100mb = Transaction::replace_range(
+        proto_buf_100mb.text().len_chars(),
+        mid_100mb..(mid_100mb + 100),
+        &replacement,
+    )
+    .unwrap();
+
+    group.bench_function("apply_100char_replace_100mb", |b| {
+        b.iter_batched(
+            || proto_buf_100mb.clone(),
+            |mut buf| {
+                let res = buf.apply(black_box(tx_100char_100mb.clone())).unwrap();
+                black_box(res);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+
+    // (c) Apply a transaction with 100 scattered small edits (100 MB)
+    let len_100mb = proto_buf_100mb.text().len_chars();
+    let step = (len_100mb - 200) / 100;
+    let mut edits_100 = Vec::with_capacity(100);
+    for i in 0..100 {
+        let start = i * step + 10;
+        edits_100.push((start..(start + 1), "Z"));
+    }
+    let tx_100_scattered_100mb = Transaction::from_edits(len_100mb, &edits_100).unwrap();
+
+    group.bench_function("apply_100_scattered_edits_100mb", |b| {
+        b.iter_batched(
+            || proto_buf_100mb.clone(),
+            |mut buf| {
+                let res = buf
+                    .apply(black_box(tx_100_scattered_100mb.clone()))
+                    .unwrap();
+                black_box(res);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+
+    // (d) Undo of (a) on 100 MB buffer
+    group.bench_function("undo_1char_insert_100mb", |b| {
+        b.iter_batched(
+            || {
+                let mut buf = proto_buf_100mb.clone();
+                buf.apply(tx_1char_100mb.clone()).unwrap();
+                buf
+            },
+            |mut buf| {
+                let res = buf.undo().unwrap().unwrap();
+                black_box(res);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+
+    // (e) Invert only: inverting 100-character replacement changeset against 100 MB text
+    let cs_100char = tx_100char_100mb.changes.clone();
+    let text_ref = proto_buf_100mb.text();
+
+    group.bench_function("invert_only_100char_replace_100mb", |b| {
         b.iter(|| {
-            let tx = Transaction::insert_at(
-                buffer.text().len_chars(),
-                black_box(mid),
-                black_box("TEST"),
-            )
-            .unwrap();
-            buffer.apply(tx).unwrap();
-            buffer.undo().unwrap().unwrap();
+            let inv = cs_100char.invert(black_box(text_ref)).unwrap();
+            black_box(inv);
         });
     });
 
-    // 2. Mapping 1,000 marks through a transaction
+    // Mapping 1,000 marks through a transaction with black_box
     let mut marks = Marks::new();
     for i in 0..1000usize {
         let mark_char = char::from_u32((33 + (i % 90)) as u32).unwrap();

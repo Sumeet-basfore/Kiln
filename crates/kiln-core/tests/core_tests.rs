@@ -327,3 +327,107 @@ fn test_unicode_and_approx_bytes() {
     // History memory estimate
     assert!(buffer.history().approx_bytes() > 0);
 }
+
+#[test]
+fn test_apply_delete_then_insert_and_retain() {
+    // Verifies that in apply, Delete does not advance position, Insert advances it, and Retain continues correctly.
+    // Text: "ABCDEF" (len 6)
+    // Operations at pos 1:
+    // Retain(1) -> pos 1
+    // Delete(2) -> deletes "BC" from pos 1..3 -> text becomes "ADEF", pos stays 1
+    // Insert("XYZ") -> inserts at pos 1 -> text becomes "AXYZDEF", pos becomes 1 + 3 = 4
+    // Retain(3) -> retains "DEF" (3 chars) -> pos becomes 7
+    let text = Text::from("ABCDEF");
+    let ops = vec![
+        Operation::Retain(1),
+        Operation::Delete(2),
+        Operation::Insert("XYZ".to_string()),
+        Operation::Retain(3),
+    ];
+    let cs = ChangeSet::from_ops(ops);
+    let result = cs.apply(&text).unwrap();
+    assert_eq!(result.to_string(), "AXYZDEF");
+}
+
+#[test]
+fn test_selections_before_after_restoration_undo_redo() {
+    let mut allocator = BufferIdAllocator::new();
+    let mut buffer = Buffer::new(allocator.allocate(), Text::from("Hello World"));
+
+    // Set selection before edit: [0..5] ("Hello")
+    buffer.set_selections(Selections::new(vec![Range::new(0, 5)], 0).unwrap());
+
+    // Transaction that changes text and establishes new selections [6..11] ("World")
+    let mut tx = Transaction::insert_at(11, 11, "!").unwrap();
+    tx.selections_before = Some(buffer.selections().clone());
+    tx.selections_after = Some(Selections::new(vec![Range::new(6, 12)], 0).unwrap());
+
+    buffer.apply(tx).unwrap();
+    assert_eq!(buffer.text().to_string(), "Hello World!");
+    assert_eq!(buffer.selections().ranges(), &[Range::new(6, 12)]);
+
+    // Undo: should restore text AND selections_before
+    buffer.undo().unwrap();
+    assert_eq!(buffer.text().to_string(), "Hello World");
+    assert_eq!(buffer.selections().ranges(), &[Range::new(0, 5)]);
+
+    // Redo: should restore text AND selections_after
+    buffer.redo().unwrap();
+    assert_eq!(buffer.text().to_string(), "Hello World!");
+    assert_eq!(buffer.selections().ranges(), &[Range::new(6, 12)]);
+}
+
+#[test]
+fn test_jump_to_and_jump_to_seq_two_branches_with_text_validation() {
+    let mut allocator = BufferIdAllocator::new();
+    let mut buffer = Buffer::new(allocator.allocate(), Text::from("Root"));
+
+    // Node 1 (seq 1): "Root -> Branch 1"
+    buffer
+        .apply(Transaction::insert_at(4, 4, " -> Branch 1").unwrap())
+        .unwrap();
+    let seq_1 = buffer
+        .history()
+        .get_seq(buffer.history().current().unwrap())
+        .unwrap();
+    assert_eq!(buffer.text().to_string(), "Root -> Branch 1");
+
+    // Undo back to Root
+    buffer.undo().unwrap();
+    assert_eq!(buffer.text().to_string(), "Root");
+
+    // Node 2 (seq 2): "Root -> Branch 2"
+    buffer
+        .apply(Transaction::insert_at(4, 4, " -> Branch 2").unwrap())
+        .unwrap();
+    let seq_2 = buffer
+        .history()
+        .get_seq(buffer.history().current().unwrap())
+        .unwrap();
+    assert_eq!(buffer.text().to_string(), "Root -> Branch 2");
+
+    // Add child to Branch 2 -> Node 3 (seq 3): "Root -> Branch 2 -> Sub 2"
+    let len_b2 = buffer.text().len_chars();
+    buffer
+        .apply(Transaction::insert_at(len_b2, len_b2, " -> Sub 2").unwrap())
+        .unwrap();
+    let seq_3 = buffer
+        .history()
+        .get_seq(buffer.history().current().unwrap())
+        .unwrap();
+    assert_eq!(buffer.text().to_string(), "Root -> Branch 2 -> Sub 2");
+
+    // Jump to Branch 1 (seq_1) across branches:
+    // Undoes Sub 2, undoes Branch 2 (back to Root LCA), redoes Branch 1
+    buffer.jump_to_seq(seq_1).unwrap();
+    assert_eq!(buffer.text().to_string(), "Root -> Branch 1");
+
+    // Jump to Branch 2 leaf (seq_3):
+    // Undoes Branch 1 (back to Root LCA), redoes Branch 2, redoes Sub 2
+    buffer.jump_to_seq(seq_3).unwrap();
+    assert_eq!(buffer.text().to_string(), "Root -> Branch 2 -> Sub 2");
+
+    // Jump to Branch 2 intermediate node (seq_2):
+    buffer.jump_to_seq(seq_2).unwrap();
+    assert_eq!(buffer.text().to_string(), "Root -> Branch 2");
+}

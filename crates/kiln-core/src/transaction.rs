@@ -105,35 +105,29 @@ impl ChangeSet {
             });
         }
 
-        let mut result = Text::new();
-        let mut cursor = 0;
+        let mut result = text.clone();
+        let mut pos = 0;
 
         for op in &self.ops {
             match op {
                 Operation::Retain(n) => {
-                    if *n > 0 {
-                        let slice = text.slice(cursor..(cursor + n)).map_err(|_| {
-                            CoreError::InvalidChangeSet {
-                                message: "Retain slice out of bounds",
-                            }
-                        })?;
-                        result.insert(result.len_chars(), &slice).map_err(|_| {
-                            CoreError::InvalidChangeSet {
-                                message: "Insert retain slice failed",
-                            }
-                        })?;
-                        cursor += n;
-                    }
+                    pos += n;
                 }
                 Operation::Delete(n) => {
-                    cursor += n;
+                    result
+                        .remove(pos..(pos + n))
+                        .map_err(|_| CoreError::InvalidChangeSet {
+                            message: "Delete range out of bounds",
+                        })?;
+                    // Note: Delete does not advance `pos`
                 }
                 Operation::Insert(s) => {
-                    result.insert(result.len_chars(), s).map_err(|_| {
-                        CoreError::InvalidChangeSet {
+                    result
+                        .insert(pos, s)
+                        .map_err(|_| CoreError::InvalidChangeSet {
                             message: "Insert failed",
-                        }
-                    })?;
+                        })?;
+                    pos += s.chars().count();
                 }
             }
         }
