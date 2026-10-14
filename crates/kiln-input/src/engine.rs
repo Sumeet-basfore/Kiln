@@ -128,11 +128,13 @@ impl InputEngine {
         // 2. Mode-specific dispatch
         match self.mode {
             Mode::Insert => {
-                // Any unmodified character inserts directly into the buffer
-                if event.modifiers.is_empty() {
-                    if let KeyCode::Char(c) = event.code {
-                        return InputResult::InsertChar(c);
-                    }
+                // Any unmodified character inserts directly; Shift is accepted
+                // because the character value is already transformed (e.g., 'a' + Shift → 'A')
+                if let KeyCode::Char(_) = event.code {
+                    return InputResult::InsertChar(match event.code {
+                        KeyCode::Char(c) => c,
+                        _ => '\0',
+                    });
                 }
                 InputResult::Ignored
             }
@@ -154,17 +156,16 @@ impl InputEngine {
                     self.command_line.pop();
                     InputResult::CommandLineChanged(self.command_line.clone())
                 }
-                KeyCode::Char(c) if event.modifiers.is_empty() => {
+                KeyCode::Char(c) => {
                     self.command_line.push(c);
                     InputResult::CommandLineChanged(self.command_line.clone())
                 }
                 _ => InputResult::Ignored,
             },
             Mode::Search => {
-                if event.modifiers.is_empty() {
-                    if let KeyCode::Char(c) = event.code {
-                        return InputResult::InsertChar(c);
-                    }
+                // Accept any character key including Shift-modified
+                if let KeyCode::Char(c) = event.code {
+                    return InputResult::InsertChar(c);
                 }
                 InputResult::Ignored
             }
