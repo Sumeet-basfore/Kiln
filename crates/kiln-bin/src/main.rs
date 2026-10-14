@@ -131,7 +131,7 @@ fn run_interactive(path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let mut config_warnings = session.apply_config(loaded_config);
     let mut load_result = None;
     let load_path = path.clone();
-    let load_task = tokio::task::spawn_blocking(move || {
+    let load_task = runtime.spawn_blocking(move || {
         file_io::read_file(&load_path).map(|bytes| kiln_bin::decode_loaded_file(load_path, &bytes))
     });
     match runtime.block_on(load_task) {
@@ -160,9 +160,9 @@ fn run_interactive(path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
                 .map_or(theme_path.clone(), |parent| parent.join(theme_path))
         };
         let path_for_worker = theme_path.clone();
-        match runtime.block_on(tokio::task::spawn_blocking(move || {
-            kiln_config::load_theme_file(path_for_worker)
-        })) {
+        match runtime
+            .block_on(runtime.spawn_blocking(move || kiln_config::load_theme_file(path_for_worker)))
+        {
             Ok(Ok(theme_file)) => apply_theme_file(&mut theme, &theme_file),
             Ok(Err(diagnostic)) => config_warnings.push(diagnostic.to_string()),
             Err(error) => config_warnings.push(format!("could not load theme: {error}")),
@@ -287,7 +287,7 @@ fn run_interactive(path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
                         match session.handle_key(key) {
                             SessionAction::Save(request) => {
                                 let save_request = request.clone();
-                                pending_save = Some(tokio::task::spawn_blocking(move || {
+                                pending_save = Some(runtime.spawn_blocking(move || {
                                     let result = kiln_bin::encode_save_request(&save_request)
                                         .and_then(|bytes| {
                                             file_io::save_file(&save_request.path, &bytes)
