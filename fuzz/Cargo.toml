@@ -1,0 +1,19 @@
+[package]
+name = "kiln-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+kiln-config = { path = "../crates/kiln-config" }
+
+[[bin]]
+name = "config_loader"
+path = "fuzz_targets/config_loader.rs"
+test = false
+doc = false
+bench = false

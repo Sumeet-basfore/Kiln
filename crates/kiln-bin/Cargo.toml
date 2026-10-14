@@ -18,3 +18,4 @@ kiln-config = { path = "../kiln-config" }
 kiln-services = { path = "../kiln-services" }
 kiln-input = { path = "../kiln-input" }
 kiln-ui = { path = "../kiln-ui" }
+tokio.workspace = true

@@ -27,8 +27,8 @@ Update this file at the end of every ticket. Status values: `todo`, `in-progress
 | T05 | 0.1 | kiln-input: key parsing, mode state machine, keymaps | done | 2026-10-13 | Terminal-agnostic KeyEvent, Mode, KeymapTrie, VimStateMachine (3dw, \"ayy, d2j, ciw), InputEngine |
 | T06 | 0.1 | Vim motions and operators, first batch | done | 2026-10-13 | Motions (h/j/k/l/w/b/e/W/B/E/0/^/$/gg/G/f/F/t/T/;/;/%); operators (d/c/y, dd/cc/yy); commands (x/p/P/u/Ctrl-r/o/O/a/A/i/I/J); text objects (iw/aw/i"/a"/i(/a(/i{/a{); registers |
 | T07 | 0.1 | kiln-ui: buffer view, status line, cursor, dark theme | done | 2026-10-13 | Renderer trait, RatatuiRenderer, TestRenderer, BufferView, Gutter (hybrid), StatusLine, DarkTheme, TerminalGuard panic hook, 200x60 bench |
-| T08 | 0.1 | File open, atomic save, headless test harness | todo | | |
-| T09 | 0.1 | kiln-config: TOML config with defaults and validation | todo | | |
+| T08 | 0.1 | File open, atomic save, headless test harness | done | 2026-10-13 | CLI open, background byte I/O, encoding/line-ending preservation, atomic save, Ex quit/save commands, scripted headless driver, security tests |
+| T09 | 0.1 | kiln-config: TOML config with defaults and validation | done | 2026-10-13 | Global typed config, per-section fallback with path/line diagnostics, keybinding overrides, custom theme parsing, JSON Schema, startup integration |
 | T10 | 0.2 | Splits, tabs, multiple buffers | todo | | |
 | T11 | 0.2 | Registers, clipboard, search/replace, macros, dot repeat | todo | | |
 | T12 | 0.2 | kiln-syntax: tree-sitter highlighting, incremental reparse | todo | | |

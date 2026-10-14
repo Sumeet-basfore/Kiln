@@ -1,5 +1,7 @@
 //! `kiln-services` crate: lsp, search, git, file watcher, agent/pty (async).
 
+pub mod file_io;
+
 /// Returns the name of this crate.
 #[must_use]
 pub fn name() -> &'static str {

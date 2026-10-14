@@ -22,6 +22,10 @@ pub enum InputResult {
     VimAction(VimAction),
     /// In Insert mode: a raw character to insert.
     InsertChar(char),
+    /// The command line changed.
+    CommandLineChanged(String),
+    /// A command-line command was submitted.
+    SubmitCommand(String),
     /// Key sequence is a partial match or waiting for more input.
     Pending,
     /// Unhandled or invalid key event (discarded cleanly).
@@ -34,6 +38,7 @@ pub struct InputEngine {
     keymaps: Keymaps,
     vim_machine: VimStateMachine,
     pending_keys: Vec<KeyEvent>,
+    command_line: String,
 }
 
 impl Default for InputEngine {
@@ -51,6 +56,7 @@ impl InputEngine {
             keymaps: Keymaps::with_defaults(),
             vim_machine: VimStateMachine::new(),
             pending_keys: Vec::new(),
+            command_line: String::new(),
         }
     }
 
@@ -62,8 +68,18 @@ impl InputEngine {
 
     /// Explicitly switches the current mode and resets any pending input buffers.
     pub fn set_mode(&mut self, mode: Mode) {
+        let leaving_command = self.mode == Mode::Command && mode != Mode::Command;
         self.mode = mode;
         self.reset_pending();
+        if mode == Mode::Command || leaving_command {
+            self.command_line.clear();
+        }
+    }
+
+    /// Returns the current command-line contents.
+    #[must_use]
+    pub fn command_line(&self) -> &str {
+        &self.command_line
     }
 
     /// Returns a reference to the active keymaps.
@@ -128,8 +144,23 @@ impl InputEngine {
                     StepResult::Invalid | StepResult::Cancelled => InputResult::Ignored,
                 }
             }
-            Mode::Command | Mode::Search => {
-                // Command/Search line input handling (Esc was handled by keymap)
+            Mode::Command => match event.code {
+                KeyCode::Enter => {
+                    let command = std::mem::take(&mut self.command_line);
+                    self.set_mode(Mode::Normal);
+                    InputResult::SubmitCommand(command)
+                }
+                KeyCode::Backspace => {
+                    self.command_line.pop();
+                    InputResult::CommandLineChanged(self.command_line.clone())
+                }
+                KeyCode::Char(c) if event.modifiers.is_empty() => {
+                    self.command_line.push(c);
+                    InputResult::CommandLineChanged(self.command_line.clone())
+                }
+                _ => InputResult::Ignored,
+            },
+            Mode::Search => {
                 if event.modifiers.is_empty() {
                     if let KeyCode::Char(c) = event.code {
                         return InputResult::InsertChar(c);

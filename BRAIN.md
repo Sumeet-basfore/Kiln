@@ -5,6 +5,11 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 ## Decisions
 | Date | Decision | Why | Ticket |
 |---|---|---|---|
+| 2026-10-13 | T09 config recovers per section; malformed TOML falls back completely | Preserve valid sibling settings while preventing startup failure; line-aware diagnostics identify bad section/field | T09 |
+| 2026-10-13 | T09 loads only trusted user-global config; project config remains deferred to T28 | `.kiln.toml` may define executable commands and must remain inactive until explicit trust | T09 |
+| 2026-10-13 | `serde_json` explicitly allowed for kiln-config schema serialization | `schemars` produces the schema model; JSON serialization is a direct public API requirement | T09 |
+| 2026-10-13 | File I/O service stays stdlib-only and byte-oriented; `kiln-bin` decodes/encodes on Tokio blocking pool | `scripts/check-deps.sh` forbids external dependencies and kiln-text dependency in kiln-services; keep crate boundaries strict and editor responsive | T08 |
+| 2026-10-13 | Atomic-save rename failure never falls back to in-place write | SECURITY.md outranks the TDD fallback note; preserve original content on failure | T08 |
 | 2026-10-13 | D2 confirmed: Renderer trait with ratatui+crossterm backend and TestRenderer | Decouples view logic from terminal engine; 200x60 frame render time ~161 µs (top), ~168 µs (middle), well below 16 ms budget | T07 |
 | 2026-10-13 | TerminalGuard RAII and panic hook for terminal state restoration | Guarantees raw mode, alternate screen, and cursor visibility are always restored on exit or panic | T07 |
 | 2026-10-13 | Pure MotionEvaluator & TextObjectEvaluator in kiln-core; Registers on CommandContext | Keeps motion/text object logic decoupled from input layer, pure functions over Text; registers support linewise & characterwise | T06 |
@@ -33,6 +38,7 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 - Which agent protocol for v2 (ACP, MCP or both).
 
 ## Gotchas and lessons
+- 2026-10-13 · T08 · A process killed after temporary-file flush but before rename leaves the original target intact; a crash may leave a temp artifact for future cleanup policy.
 - 2026-10-13 · T07 · Criterion benchmark on 100 MB buffer at 200x60 viewport: `render_frame_top_200x60_100mb`: ~161.31 µs; `render_frame_middle_200x60_100mb`: ~168.53 µs. Both are ~95x faster than the 16 ms keystroke-to-screen budget.
 - 2026-10-13 · T03 · Criterion benchmark on 100 MB buffer: `apply_1char_insert` scales with $O(\log N)$ across file sizes (1 MB: 1.20 µs, 10 MB: 1.44 µs, 100 MB: 1.63 µs); `apply_100char_replace_100mb`: 1.73 µs; `apply_100_scattered_edits_100mb`: 160.03 µs; `undo_1char_insert_100mb`: 2.39 µs; `invert_only_100char_replace_100mb`: 160.51 ns; `map_1000_marks`: 1.08 µs.
 - 2026-10-13 · T03 · Benchmarks must use `black_box` and the budgets come from the PRD, never invented. An earlier apply benchmark showed ~179 ms because `ChangeSet::apply` rebuilt an entire new `Text` rope by slicing and re-inserting all retained characters, which was $O(N)$ with ~100 MB allocations. Making `apply` incremental via `text.clone()` and in-place `remove`/`insert` on mutations dropped single-edit application from 179 ms down to 1.63 µs (~110,000x speedup).
@@ -52,6 +58,8 @@ Append-only log of decisions, gotchas, ideas and follow-ups. Agents and humans b
 - History tree size cap and pruning: Implement history node limit and pruning policy in T15 (persistent undo).
 
 ## Session log
+- 2026-10-13 · CommandCode · T09 · Global config loader, defaults, recoverable diagnostics, keybinding overrides, custom theme file parsing/application, JSON Schema, and startup warnings; config loader/integration tests. Full workspace verification and cargo audit pass.
+- 2026-10-13 · CommandCode · T08 · CLI file open, byte-oriented atomic save service, background load/save and encoding work, binary read-only warning, :w/:q/:wq/:q!, and shared headless scripted driver; save-interruption, permission, symlink, and fixture tests. `cargo test --workspace`, fmt, clippy, and dependency-direction checks pass.
 - 2026-10-13 · Antigravity · T07 · kiln-ui: Renderer trait, RatatuiRenderer, TestRenderer, BufferView with scrolloff & selections, Gutter (hybrid), StatusLine with responsive truncation, DarkTheme, TerminalGuard & panic hook; snapshot, resize, and terminal tests; 200x60 frame benchmark.
 - 2026-10-13 · Antigravity · T06 · Vim motions (h/j/k/l/w/b/e/W/B/E/0/^/$/gg/G/f/F/t/T/;/;/%); operators (d/c/y, dd/cc/yy); commands (x/p/P/u/Ctrl-r/o/O/a/A/i/I/J); text objects (iw/aw/i"/a"/i(/a(/i{/a{); registers store; table-driven unit tests.
 - 2026-10-13 · Antigravity · T05 · kiln-input key parsing (KeyEvent, KeyCode, KeyModifiers), mode state machine (Mode, VisualKind), KeymapTrie per mode with timeouts, Vim grammar state machine (VimAction, 3dw, "ayy, d2j, ciw), InputEngine.

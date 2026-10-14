@@ -1,0 +1,16 @@
+{
+  "tasteLearning": true,
+  "permissions": {
+    "allow": [
+      "Shell(git:*)",
+      "Shell(for:*)",
+      "Shell(do:*)",
+      "Shell(wc:*)",
+      "Shell(done:*)",
+      "Shell(cargo:*)",
+      "Shell(awk:*)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}
